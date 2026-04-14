@@ -5,22 +5,21 @@ FROM eclipse-temurin:17-jdk-focal AS build
 ENV ANDROID_SDK_ROOT /opt/android-sdk
 ENV PATH ${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools
 
-# Install dependencies
-RUN apt-get update && apt-get install -y wget unzip && rm -rf /var/lib/apt/lists/*
-
-# Install Android SDK
+# Install essential libs and SDK
+RUN apt-get update && apt-get install -y wget unzip libncurses5 && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
-    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
-    unzip -q cmdline-tools.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip && \
+    unzip -q cmdline.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools && \
     mv ${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
-    rm cmdline-tools.zip
+    rm cmd.zip
 
-# Accept licenses
-RUN yes | sdkmanager --licenses
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
 # Copy project files
 WORKDIR /app
 COPY . .
+
 
 # Ensure gradlew is executable
 RUN chmod +x gradlew

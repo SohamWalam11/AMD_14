@@ -1,0 +1,11 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/prism-app', '.']
+    timeout: '1200s' # 20 minutes
+
+images:
+  - 'gcr.io/$PROJECT_ID/prism-app'
+
+options:
+  machineType: 'E2_HIGHCPU_8' # Requesting a more powerful machine for Android build
+  logging: 'CLOUD_LOGGING_ONLY'

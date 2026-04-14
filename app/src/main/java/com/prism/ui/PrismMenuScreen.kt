@@ -44,8 +44,9 @@ fun PrismMenuScreen(modifier: Modifier = Modifier) {
             onValueChange = {},
             placeholder = { Text("Search ingredients or recipes...") },
             leadingIcon = { Icon(Icons.Default.Search, null, tint = TextSecondary) },
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = SurfaceColor,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = SurfaceColor,
+                unfocusedContainerColor = SurfaceColor,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),

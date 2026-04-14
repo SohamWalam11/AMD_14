@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package com.prism.state;
+
+option java_package = "com.prism.state.proto";
+option java_multiple_files = true;
+
+/** Persistent user profile stored via Proto DataStore. */
+message UserProfileProto {
+    FitnessGoal goal = 1;
+    DietType diet = 2;
+    repeated HouseholdMemberProto members = 3;
+    GeofenceCoords home = 4;
+}
+
+enum FitnessGoal {
+    MAINTAIN = 0;
+    MUSCLE_GAIN = 1;
+    FAT_LOSS = 2;
+    ENDURANCE = 3;
+    RECOVERY = 4;
+}
+
+enum DietType {
+    OMNIVORE = 0;
+    VEGETARIAN = 1;
+    VEGAN = 2;
+    KETO = 3;
+    PALEO = 4;
+    HALAL = 5;
+    KOSHER = 6;
+    JAIN = 7;
+    CUSTOM = 8;
+}
+
+message HouseholdMemberProto {
+    string name = 1;
+    repeated string restrictions = 2; // e.g., "low-sodium", "no-spice"
+}
+
+message GeofenceCoords {
+    double latitude = 1;
+    double longitude = 2;
+    float radius_meters = 3; // geofence trigger radius
+}

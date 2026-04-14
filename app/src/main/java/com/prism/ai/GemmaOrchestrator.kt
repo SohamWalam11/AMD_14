@@ -63,7 +63,12 @@ object GemmaOrchestrator {
         consecutiveFailures = 0
     }
 
-    suspend fun safeInfer(prompt: String): Result<String> {
+    /**
+     * Executes inference on the GCP VM.
+     * @param prompt The user input or system instruction.
+     * @param imageBase64 Optional base64 encoded image for vision models.
+     */
+    suspend fun safeInfer(prompt: String, imageBase64: String? = null): Result<String> {
         if (_thermalState.value is ThermalState.Critical) {
             return lastGoodResponse?.let { Result.success(it) }
                 ?: Result.failure(InferenceException("Thermal critical, no cached response"))
@@ -71,24 +76,14 @@ object GemmaOrchestrator {
 
         return withContext(Dispatchers.IO) {
             try {
-                // OpenAI-compatible format (uncomment if using vLLM/TGI instead of Ollama)
-                /*
+                // Ollama Format (Multi-modal support)
                 val bodyJson = JSONObject().apply {
-                    put("model", "gemma-2b-it") // or your specific model name
-                    put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", prompt)))
-                    put("temperature", 0.3)
-                }
-                val request = Request.Builder()
-                    .url("http://$GCP_VM_IP:8000/v1/chat/completions")
-                    .post(bodyJson.toString().toRequestBody("application/json".toMediaType()))
-                    .build()
-                */
-
-                // Ollama Format (defaulting to this as it's the easiest way to run Gemma)
-                val bodyJson = JSONObject().apply {
-                    put("model", "gemma:2b")
+                    put("model", if (imageBase64 != null) "llava" else "gemma:2b")
                     put("prompt", prompt)
                     put("stream", false)
+                    if (imageBase64 != null) {
+                        put("images", JSONArray().put(imageBase64))
+                    }
                     put("options", JSONObject().apply {
                         put("temperature", 0.3)
                     })
@@ -99,7 +94,7 @@ object GemmaOrchestrator {
                     .post(bodyJson.toString().toRequestBody("application/json".toMediaType()))
                     .build()
 
-                Log.d(TAG, "Sending request to GCP VM...")
+                Log.d(TAG, "Sending request to GCP VM (Vision: ${imageBase64 != null})...")
                 val response = client.newCall(request).execute()
 
                 if (!response.isSuccessful) {
@@ -107,8 +102,6 @@ object GemmaOrchestrator {
                 }
 
                 val responseString = response.body?.string() ?: ""
-                
-                // Parse Ollama response format
                 val jsonRes = JSONObject(responseString)
                 val text = jsonRes.optString("response", "")
 

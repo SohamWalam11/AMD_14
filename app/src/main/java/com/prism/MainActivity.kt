@@ -46,44 +46,50 @@ class MainActivity : ComponentActivity() {
             val vm: PrismViewModel = viewModel()
             viewModelRef = vm
 
-            val availMin by vm.availMin.collectAsState()
-            val isRecording by vm.isRecording.collectAsState()
-            val stage by vm.currentStage.collectAsState()
-            val completed by vm.completedStages.collectAsState()
-            val recipe by vm.forkedRecipe.collectAsState()
-            val uncertain by vm.uncertainItems.collectAsState()
-            val thermal by vm.thermalWarning.collectAsState()
+            val onboardingDone by vm.onboardingCompleted.collectAsState()
 
-            var currentTab by remember { mutableStateOf(1) } // 0=Menu, 1=Dashboard, 2=Profile
+            if (!onboardingDone) {
+                PrismOnboardingScreen(onComplete = vm::completeOnboarding)
+            } else {
+                val availMin by vm.availMin.collectAsState()
+                val isRecording by vm.isRecording.collectAsState()
+                val stage by vm.currentStage.collectAsState()
+                val completed by vm.completedStages.collectAsState()
+                val recipe by vm.forkedRecipe.collectAsState()
+                val uncertain by vm.uncertainItems.collectAsState()
+                val thermal by vm.thermalWarning.collectAsState()
 
-            Scaffold(
-                bottomBar = {
-                    PrismBottomNavigationBar(
-                        currentTab = currentTab,
-                        onTabSelect = { currentTab = it }
-                    )
-                }
-            ) { padding ->
-                Box(Modifier.padding(padding)) {
-                    when (currentTab) {
-                        0 -> PrismMenuScreen()
-                        1 -> PrismDashboard(
-                            availableMinutes = availMin,
-                            onTimeSelected = vm::onTimeSelected,
-                            isRecording = isRecording,
-                            onVoiceToggle = {
-                                vm.onVoiceToggle()
-                                if (!isRecording) startListening() else stopListening()
-                            },
-                            pipelineStage = stage,
-                            stageCompleted = completed,
-                            forkedRecipe = recipe,
-                            uncertainIngredients = uncertain,
-                            onIngredientConfirm = vm::onIngredientConfirm,
-                            onCameraReady = { pv -> vm.bindCamera(this@MainActivity, pv) },
-                            thermalWarning = thermal
+                var currentTab by remember { mutableStateOf(1) } // 0=Menu, 1=Dashboard, 2=Profile
+
+                Scaffold(
+                    bottomBar = {
+                        PrismBottomNavigationBar(
+                            currentTab = currentTab,
+                            onTabSelect = { currentTab = it }
                         )
-                        2 -> PrismProfileScreen()
+                    }
+                ) { padding ->
+                    Box(Modifier.padding(padding)) {
+                        when (currentTab) {
+                            0 -> PrismMenuScreen()
+                            1 -> PrismDashboard(
+                                availableMinutes = availMin,
+                                onTimeSelected = vm::onTimeSelected,
+                                isRecording = isRecording,
+                                onVoiceToggle = {
+                                    vm.onVoiceToggle()
+                                    if (!isRecording) startListening() else stopListening()
+                                },
+                                pipelineStage = stage,
+                                stageCompleted = completed,
+                                forkedRecipe = recipe,
+                                uncertainIngredients = uncertain,
+                                onIngredientConfirm = vm::onIngredientConfirm,
+                                onCameraReady = { pv -> vm.bindCamera(this@MainActivity, pv) },
+                                thermalWarning = thermal
+                            )
+                            2 -> PrismProfileScreen()
+                        }
                     }
                 }
             }

@@ -11,19 +11,23 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.prism.ai.GemmaOrchestrator
-import com.prism.ai.InferenceReasoningPipeline
-import com.prism.ai.InferenceReasoningPipeline.PipelineEvent
-import com.prism.ai.InferenceReasoningPipeline.PipelineStage
-import com.prism.ai.InferenceReasoningPipeline.ForkedRecipe
-import com.prism.ai.InferenceReasoningPipeline.IdentifiedItem
-import com.prism.state.StateCompressionEngine
+import com.prism.state.ProfileManager
+import com.prism.state.proto.DietType
+import com.prism.state.proto.FitnessGoal
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class PrismViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val profileManager = ProfileManager(application)
+
+    // --- Profile State ---
+    val onboardingCompleted = profileManager.onboardingCompleted.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), true
+    )
+    val userProfile = profileManager.profileFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), null
+    )
 
     // --- UI State ---
     private val _availMin = MutableStateFlow(30)
@@ -80,6 +84,14 @@ class PrismViewModel(application: Application) : AndroidViewModel(application) {
         _isRecording.value = false
         // Auto-trigger pipeline when voice input completes
         executePipeline()
+    }
+
+    fun completeOnboarding(diet: DietType, goal: FitnessGoal) {
+        viewModelScope.launch {
+            profileManager.updateDiet(diet)
+            profileManager.updateGoal(goal)
+            profileManager.updateOnboarding(true)
+        }
     }
 
     fun onIngredientConfirm(confirmed: List<IdentifiedItem>) {
@@ -139,11 +151,19 @@ class PrismViewModel(application: Application) : AndroidViewModel(application) {
             _completedStages.value = emptySet()
             _forkedRecipe.value = null
 
-            // Build compressed state
+            val profile = userProfile.value
+            
+            // Build compressed state including user preferences
             val state = StateCompressionEngine.buildManual(
                 availMin = _availMin.value
             )
-            val stateJson = state.toJson()
+            // Inject diet and goal into the prompt context via the state bridge
+            val stateJson = JSONObject(state.toJson()).apply {
+                profile?.let {
+                    put("diet", it.diet.name)
+                    put("goal", it.goal.name)
+                }
+            }.toString()
 
             // Capture current camera frame
             captureFrame { bitmap ->

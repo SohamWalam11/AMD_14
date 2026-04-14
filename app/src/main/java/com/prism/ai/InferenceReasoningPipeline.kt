@@ -226,11 +226,12 @@ object InferenceReasoningPipeline {
                 // Collapsed single-shot prompt — no CoT, faster but less accurate
                 append("<task>Output a JSON array mapping each ingredient to allowed household ")
                 append("members and feasible cooking methods given time and dietary constraints. ")
+                append("IMPORTANT: Respect the User Diet Type specified in the <state> section. ")
                 append("""Format: [{"i":"ingredient","m":["member"],"c":["method"]}]</task>""")
             } else {
                 // Full chain-of-thought reasoning
                 append("<task>Think step-by-step before answering:\n")
-                append("1. Which ingredients match the user's diet type? Filter out restricted items.\n")
+                append("1. Which ingredients match the user's diet type (Non-Veg/Veg/Vegan etc)? Filter out restricted items.\n")
                 append("2. Given available_minutes in state, which cooking methods are feasible? ")
                 append("(e.g., if <15min: only stir-fry, microwave, assembly. No baking/slow-cook.)\n")
                 append("3. Given sleep and step data, should we favor high-energy or recovery meals? ")

@@ -84,16 +84,22 @@ fun PrismDashboard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.WifiTethering, contentDescription = "Connection", tint = TextPrimary, modifier = Modifier.size(24.dp))
-                Text("Prism", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Column {
+                    Text("Hello,", fontSize = 14.sp, color = TextSecondary)
+                    Text("Prism", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                }
                 Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.LightGray),
+                    modifier = Modifier.size(44.dp).clip(CircleShape).background(ChipSelectedBg),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Person, contentDescription = "Profile", tint = ChipSelectedText, modifier = Modifier.size(24.dp))
                 }
             }
 
+            Spacer(Modifier.height(24.dp))
+
+            // === DAILY RECOMMENDATION ===
+            DailyRecommendationCard()
             Spacer(Modifier.height(24.dp))
 
             // Thermal warning banner
@@ -110,7 +116,7 @@ fun PrismDashboard(
             }
 
             // === TIME CHIPS ===
-            TimeChipRow(selected = availableMinutes, onSelect = onTimeSelected)
+            TimeChipRow(selected = availableMinutes, onTimeSelected)
             Spacer(Modifier.height(24.dp))
 
             // === CAMERA PREVIEW WITH OVERLAYS ===
@@ -158,6 +164,39 @@ fun PrismDashboard(
 }
 
 @Composable
+private fun DailyRecommendationCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .shadow(12.dp, RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = ChipSelectedBg)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Restaurant, contentDescription = null, tint = ChipSelectedText)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text("Recommended for you", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ChipSelectedText)
+                Text("Cottage Cheese Salad", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                Text("High Protein · 15m prep", fontSize = 12.sp, color = TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
 private fun TimeChipRow(selected: Int, onSelect: (Int) -> Unit) {
     val options = listOf(10, 20, 45)
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -180,6 +219,7 @@ private fun TimeChipRow(selected: Int, onSelect: (Int) -> Unit) {
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) ChipSelectedBg else ChipUnselectedBg)
+                        .clickable { onSelect(min) }
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     Text(

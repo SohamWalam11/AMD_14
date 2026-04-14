@@ -22,6 +22,9 @@ RUN yes | sdkmanager --licenses
 WORKDIR /app
 COPY . .
 
+# Ensure gradlew is executable
+RUN chmod +x gradlew
+
 # Build the APK
 RUN ./gradlew assembleDebug --no-daemon
 
@@ -34,6 +37,8 @@ COPY --from=build /app/app/build/outputs/apk/debug/app-debug.apk /usr/share/ngin
 # Create a simple index.html to allow direct browsing
 RUN echo '<html><body><h1>Prism Build Artifacts</h1><a href="/prism-dietary-copilot.apk">Download APK</a></body></html>' > /usr/share/nginx/html/index.html
 
-# Expose port (Cloud Run uses 8080 by default, Nginx uses 80)
-EXPOSE 80
+# Configure Nginx to listen on port 8080 (Cloud Run default)
+RUN sed -i 's/listen  80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
+
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
